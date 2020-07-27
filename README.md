@@ -1,4 +1,4 @@
-Play a uncompressed/RGB565 video file read from a microSD card (using SPI) and played a TFT screen (that uses the ILI9341 display driver).
+Play a uncompressed/RGB565 video file read from a microSD card (using SPI) and played on a TFT screen (that uses the ILI9341 display driver).
 
 For interfacing the microSD card, the open-source FatFs driver from ChaN has been used: http://elm-chan.org/fsw/ff/00index_e.html
 
