@@ -1,4 +1,5 @@
 #include <libopencm3/stm32/gpio.h>
+#include "decode/tjpgd.h"
 
 
 
@@ -19,6 +20,8 @@ void LCD_clear(void);
 void SetXY(unsigned int, unsigned int, unsigned int, unsigned int);
 
 void send_data(int val[]);
+unsigned int in_func (JDEC* jd, uint8_t* buff, unsigned int nbyte  );
+int out_func (JDEC* jd, void* bitmap, JRECT* rect );
 
 
 

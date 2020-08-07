@@ -6,6 +6,9 @@
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/dma.h>
 #include <libopencm3/cm3/nvic.h>
+#include <libopencm3/stm32/flash.h>
+
+
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
@@ -15,7 +18,85 @@
 #include "chanfiles/diskio.h"
 #include "sdtfttest.h"
 
-int Paint(FIL);
+int Paint(void);
+
+/* User defined device identifier */
+typedef struct {
+    FIL fp;               /* File pointer for input function */
+    uint8_t fbuf[2*240*180];          /* Pointer to the frame buffer for output function */
+    unsigned int wfbuf;     /* Width of the frame buffer [pix] */
+} IODEV;
+
+uint8_t dummy;
+
+/*------------------------------*/
+/* User defined input funciton  */
+/*------------------------------*/
+
+unsigned int in_func (  /* Returns number of bytes read (zero on error) */
+    JDEC* jd,           /* Decompression object */
+    uint8_t* buff,      /* Pointer to the read buffer (null to remove data) */
+    unsigned int nbyte  /* Number of bytes to read/remove */
+)
+{
+    IODEV *dev = (IODEV*)jd->device;   /* Device identifier for the session (5th argument of jd_prepare function) */
+	unsigned int bytes_ret;
+
+    if (buff) { /* Raad data from input stream */
+        //return (unsigned int)f_read(buff, 1, nbyte, dev->fp);
+        f_read(&dev->fp, buff, nbyte, &bytes_ret);
+        //usart_print_num2(bytes_ret);
+        //usart_print_text("bytes read");
+        return bytes_ret;
+    } 
+    else 
+    {    /* Remove data from input stream */
+        //usart_print_text("Empty buffer");
+        f_read(&dev->fp, dummy, nbyte, &bytes_ret);
+    	return bytes_ret;
+
+    }
+}
+
+
+
+/*------------------------------*/
+/* User defined output funciton */
+/*------------------------------*/
+
+int out_func (      /* 1:Ok, 0:Aborted */
+    JDEC* jd,       /* Decompression object */
+    void* bitmap,   /* Bitmap data to be output */
+    JRECT* rect     /* Rectangular region of output image */
+)
+{
+    IODEV *dev = (IODEV*)jd->device;
+    uint8_t *src, *dst;
+    uint16_t y, bws, bwd;
+
+
+    /* Put progress indicator */
+    if (rect->left == 0) {
+        printf("\r%lu%%", (rect->top << jd->scale) * 100UL / jd->height);
+    }
+
+    /* Copy the decompressed RGB rectanglar to the frame buffer (assuming RGB888 cfg) */
+    src = (uint8_t*)bitmap;
+    dst = dev->fbuf + 2 * (rect->top * dev->wfbuf + rect->left);  /* Left-top of destination rectangular */
+    bws = 2 * (rect->right - rect->left + 1);     /* Width of source rectangular [byte] */
+    bwd = 2 * dev->wfbuf;                         /* Width of frame buffer [byte] */
+    for (y = rect->top; y <= rect->bottom; y++) {
+        memcpy(dst, src, bws);   /* Copy a line */
+        src += bws; dst += bwd;  /* Next line */
+    }
+
+    return 1;    /* Continue to decompress */
+}
+
+
+
+
+
 
 
 //#define DEBUG 1
@@ -394,80 +475,156 @@ void LCD_clear()
 	#endif
 }
 
-int Paint(FIL file_h)
+int Paint()
 {
 	int i,j,k=1,m;
-	SetXY(0,319,0,239);
-	unsigned char ptr[2];
-	ptr[1]='\0';
-	unsigned char *ptr2;
-	ptr2=(unsigned char *)0x20000;
-	uint8_t x, y;
+	SetXY(0,239,0,179);
+	uint16_t x, y, z=0, frameno=0;
+	uint32_t pos=0;
 	unsigned int bytes_ret;
 	unsigned char memtest[640];
+	FRESULT fileStatus;  
+
+	JRESULT res;      /* Result code of TJpgDec API */
+    JDEC jdec;        /* Decompression object */
+    void *work = (void*)malloc(3100);  /* Pointer to the work area */
+    IODEV devid;      /* User defined device identifier */
 
 
-	//for(i=0;i<70;i++)
-	//f_read(&file_h, ptr2, 1, &bytes_ret);
+    fileStatus=f_open(&devid.fp, "ff3m2.mjp", FA_OPEN_EXISTING | FA_READ);	//ffmerged.mjpg, ff3m.mjp, ff3m2.mjp
+    if(fileStatus==FR_OK)
+	{
+		usart_print_text("file opened successfully");
+	}
+	else
+	{
+		usart_print_text("file open failed");
+		return 0;
+	}
+
+    #if 0
+    res = jd_prepare(&jdec, in_func, work, 3100, &devid);
+    if (res == JDR_OK) 
+    {
+        usart_print_text("Decompressing JPEG file");
+        usart_print_num2(jdec.width);
+        usart_print_num2(jdec.height);
+
+        /* Initialize output device */ 
+       // devid.fbuf = (uint8_t*)malloc(2 * jdec.width * jdec.height); /* Create frame buffer for output image (assuming RGB888 cfg) */
+        devid.wfbuf = jdec.width;
+
+        res = jd_decomp(&jdec, out_func, 0);   /* Start to decompress with 1/1 scaling */
+        if (res == JDR_OK) 
+            usart_print_text("Decompression succeeded.\n");
+        else 
+            usart_print_text("Failed to decompress");
+    } 
+    else 
+    {
+    	usart_print_num2(res);
+        usart_print_text("Failed to prepare.");
+    }
+    #endif
+
+
 
 	#if 0	//Read 1 byte at a time
 
-    for(i=0;i<240;i++)
+    for(i=0;i<180;i++)
 	{
-		for (j=0;j<320;j++)
+		k=0;
+		for (j=0;j<240;j++,k+=2)
 	   	{
-		    f_read(&file_h, ptr, 1, &bytes_ret);
-		    x=(int)ptr[0];
+		    x=(int)devid.fbuf[(i*480)+k];
 		    //usart_print_num2(x);
-		    f_read(&file_h, ptr, 1, &bytes_ret);
-		    y=(int)ptr[0];
+		    y=(int)devid.fbuf[ (i*480) + (k+1) ];
 	        Write_Data_Word( (uint16_t)((y * 0x100) + x)    );
+
 		   	
 	    }
 	 }	
 	 #endif
 
-#if 1	//Read 241 frames, 1 whole line (640 bytes=320 pixels at a time)
-for(m=0;m<241;m++)
-{
-	for(i=0;i<240;i++)
+
+devid.wfbuf = jdec.width;
+#if 1
+
+	while(!f_eof(&devid.fp))
 	{
-		f_read(&file_h, memtest, 640, &bytes_ret);
-		*(memtest + bytes_ret)='\0';
-		k=0;
-		for (j=0;j<320;j++)
-	   	{
-		    //x=(int)memtest[k];
-		    //y=(int)memtest[k+1] ;
-		    Write_Data_Word( (uint16_t)(( ( (int)memtest[k+1] ) * 0x100) + ( (int)memtest[k] ) )    );
-		    k+=2;
-	    }
-	 }	
-}
-#endif
+		pos=(int)f_tell(&devid.fp);
+
+		if(pos>0)
+		{
+			f_lseek(&devid.fp, pos+10 );
+			pos+=10;
+		}
 
 
+        while(  !(z==0xFFD9 || z==0xD9FF) && pos>0 )
+        {
+            f_lseek(&devid.fp, pos-4 );
+            f_read(&devid.fp, &z, 2, &bytes_ret);
+            pos-=2;
+        }
 
-#if 0	//Copy image to flash memory and then read - not working
+        if(z==0xFFD9)
+               f_lseek(&devid.fp, pos-1 );
+        z=0;
+        
+
+		jd_prepare(&jdec, in_func, work, 3100, &devid);
+		
+		jd_decomp(&jdec, out_func, 0);
 
 
-f_read(&file_h, ptr2, 153600, &bytes_ret);
-*(ptr2 + bytes_ret)='\0';
-
-for(i=0;i<240;i++)
-{
-	//k=0;
-	for (j=0;j<320;j++)
-	{
-		//x=(int)memtest[k];
-		//y=(int)memtest[k+1] ;
-		Write_Data_Word( (uint16_t)(( ( (int)ptr2[k+1] ) * 0x100) + ( (int)ptr2[k] ) )    );
-		k+=2;
+	    for(i=0;i<180;i++)
+		{
+			k=0;
+			for (j=0;j<240;j++,k+=2)
+		   	{
+			    x=(int)devid.fbuf[(i*480)+k];
+			    y=(int)devid.fbuf[ (i*480) + (k+1) ];
+		        Write_Data_Word( (uint16_t)((y * 0x100) + x)    );
+		    }
+		 }	
 	}
-}	
 
 #endif
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	#if 0	//Read 241 frames, 1 whole line (640 bytes=320 pixels at a time)
+	for(m=0;m<241;m++)
+	{
+		for(i=0;i<240;i++)
+		{
+			f_read(&file_h, memtest, 640, &bytes_ret);
+			*(memtest + bytes_ret)='\0';
+			k=0;
+			for (j=0;j<320;j++)
+		   	{
+			    //x=(int)memtest[k];
+			    //y=(int)memtest[k+1] ;
+			    Write_Data_Word( (uint16_t)(( ( (int)memtest[k+1] ) * 0x100) + ( (int)memtest[k] ) )    );
+			    k+=2;
+		    }
+		 }	
+	}
+	#endif
 
 
 
@@ -571,7 +728,9 @@ int main(void)
 	f_mkdir("mars");		//max character length = 8?
 								//max limit one directory at a time; a new sub-directory of length 8 can only be created if the parent directory exists.
 
-	fileStatus=f_open(&file_h, "testvid.rgb", FA_OPEN_EXISTING | FA_READ);
+	#if 0
+
+	fileStatus=f_open(&file_h, "test123.txt", FA_OPEN_EXISTING | FA_READ);	//testvid.rgb, testimg3.rgb, gowj.jpg, test123.txt, ffmerged.mjpg
 	if(fileStatus==FR_OK)
 	{
 		usart_print_text("file opened successfully");
@@ -580,8 +739,19 @@ int main(void)
 	{
 		usart_print_text("file open failed");
 	}
+	#endif
 
-	Paint(file_h);
+	#if 0
+	uint16_t texttest;
+	unsigned int bytes_ret;
+	while(!f_eof(&file_h))
+	{
+		f_read(&file_h, &texttest, 2, &bytes_ret);
+		usart_print_num2(texttest);
+	}
+	#endif
+
+	Paint();
 
 
 #endif

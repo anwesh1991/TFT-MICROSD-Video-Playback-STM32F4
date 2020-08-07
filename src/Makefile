@@ -1,6 +1,7 @@
 OBJS = chanfiles/ff.o
 OBJS += chanfiles/fattime.o
 OBJS += chanfiles/diskio.o
+OBJS += decode/tjpgd.o
 ##OBJS += sdtest.o
 
 BINARY = sdtfttest
