@@ -218,7 +218,7 @@ DSTATUS disk_initialize (
     }
     else
     {
-        //usart_print_text("disk initialization success");
+        usart_print_text("disk initialization success");
     }
 
      // Set block length to 512 (CMD16)
