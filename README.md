@@ -8,7 +8,7 @@ SPI has limited bandwidth of about 0.5 - 1 MBps and the size of the uncompressed
 
 ![output](https://user-images.githubusercontent.com/7463848/88504308-a535bc00-cfd4-11ea-8d88-3fa69427adc9.gif)
 
-After integrating a JPEG decoder to read compressed/MJPEG video files instead, the framerate improved, but is still far from perfect.
+After integrating a JPEG decoder to read compressed/MJPEG video files instead, the framerate improved, but is still far from perfect. Since STM32F446RE's SRAM is only 128 KB, it wasn't enough to process a 320x240 MJPEG video, which would have needed 150 KB of SRAM instead. So the video was resized to 240x180.
 
 ![output](https://user-images.githubusercontent.com/7463848/89697870-7e557f00-d91e-11ea-9069-0d3e8b4c03c3.gif)
 
