@@ -1,4 +1,4 @@
-Play an MJPEG or an uncompressed/RGB565 video file read from a microSD card (using SPI-DMA) and displayed on a TFT screen (that uses the ILI9341 display driver).
+Project to support MJPEG and uncompressed/RGB565 playback in STM32 using software decoding. The code reads the video file from a microSD card (using SPI-DMA) and displays the frames on a TFT screen (the screen uses the ILI9341 display driver).
 
 For interfacing the microSD card, the open-source FatFs driver from ChaN has been used: http://elm-chan.org/fsw/ff/00index_e.html
 
