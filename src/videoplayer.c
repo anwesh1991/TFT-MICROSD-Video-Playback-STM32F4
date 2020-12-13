@@ -16,7 +16,7 @@
 
 #include "chanfiles/ff.h"
 #include "chanfiles/diskio.h"
-#include "sdtfttest.h"
+#include "videoplayer.h"
 
 int Paint(void);
 
