@@ -10,7 +10,7 @@
 #include "diskio.h"
 #include <math.h>
 #include <libopencm3/stm32/usart.h>
-#include "../sdtfttest.h"
+#include "../videoplayer.h"
 #include <libopencm3/stm32/dma.h>
 
 int cdv;
