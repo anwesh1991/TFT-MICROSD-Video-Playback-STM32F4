@@ -18,16 +18,20 @@
 #include "chanfiles/diskio.h"
 #include "videoplayer.h"
 
-int Paint(void);
+
+uint8_t dummy;
+
+
 
 /* User defined device identifier */
 typedef struct {
-    FIL fp;               /* File pointer for input function */
-    uint8_t fbuf[2*240*180];          /* Pointer to the frame buffer for output function */
-    unsigned int wfbuf;     /* Width of the frame buffer [pix] */
+    FIL fp;               				/* File pointer for input function */
+    uint8_t fbuf[2*240*180];          	/* Pointer to the frame buffer for output function */
+    unsigned int wfbuf;     			/* Width of the frame buffer [pix] */
 } IODEV;
 
-uint8_t dummy;
+
+
 
 /*------------------------------*/
 /* User defined input funciton  */
@@ -42,19 +46,17 @@ unsigned int in_func (  /* Returns number of bytes read (zero on error) */
     IODEV *dev = (IODEV*)jd->device;   /* Device identifier for the session (5th argument of jd_prepare function) */
 	unsigned int bytes_ret;
 
-    if (buff) { /* Raad data from input stream */
-        //return (unsigned int)f_read(buff, 1, nbyte, dev->fp);
+    if (buff) 
+    { 
+    	/* Raad data from input stream */
         f_read(&dev->fp, buff, nbyte, &bytes_ret);
-        //usart_print_num2(bytes_ret);
-        //usart_print_text("bytes read");
         return bytes_ret;
     } 
     else 
-    {    /* Remove data from input stream */
-        //usart_print_text("Empty buffer");
-        f_read(&dev->fp, dummy, nbyte, &bytes_ret);
+    {    
+    	/* Remove data from input stream */
+        f_read(&dev->fp, &dummy, nbyte, &bytes_ret);
     	return bytes_ret;
-
     }
 }
 
@@ -80,26 +82,21 @@ int out_func (      /* 1:Ok, 0:Aborted */
         printf("\r%lu%%", (rect->top << jd->scale) * 100UL / jd->height);
     }
 
-    /* Copy the decompressed RGB rectanglar to the frame buffer (assuming RGB888 cfg) */
+    /* Copy the decompressed RGB rectanglar to the frame buffer (assuming RGB565 cfg) */
     src = (uint8_t*)bitmap;
-    dst = dev->fbuf + 2 * (rect->top * dev->wfbuf + rect->left);  /* Left-top of destination rectangular */
-    bws = 2 * (rect->right - rect->left + 1);     /* Width of source rectangular [byte] */
-    bwd = 2 * dev->wfbuf;                         /* Width of frame buffer [byte] */
+    dst = dev->fbuf + 2 * (rect->top * dev->wfbuf + rect->left);  	/* Left-top of destination rectangular */
+    bws = 2 * (rect->right - rect->left + 1);     				 	/* Width of source rectangular [byte] */
+    bwd = 2 * dev->wfbuf;                         					/* Width of frame buffer [byte] */
     for (y = rect->top; y <= rect->bottom; y++) {
-        memcpy(dst, src, bws);   /* Copy a line */
-        src += bws; dst += bwd;  /* Next line */
+        memcpy(dst, src, bws);   									/* Copy a line */
+        src += bws; dst += bwd;  									/* Next line */
     }
 
-    return 1;    /* Continue to decompress */
+    return 1;    													/* Continue to decompress */
 }
 
 
-
-
-
-
-
-//#define DEBUG 1
+/*ASstm32 - Setup the GPIO pins */
 
 static void gpio_setup(void)
 {
@@ -115,6 +112,9 @@ static void gpio_setup(void)
 	gpio_set_af(GPIOA, GPIO_AF7, GPIO2);							  //USART setup
 }
 
+
+
+/*ASstm32 - Setup DMA - Stream 3, Channel 0 is used for copying data from the SD card to memory*/
 
 static void dma_init(void)
 {
@@ -146,6 +146,9 @@ static void dma_init(void)
     
 }
 
+
+/*ASstm32 - DMA interrupt service routine function to indicate when data transfer is complete */
+
 void dma1_stream3_isr()
 {
     
@@ -155,9 +158,11 @@ void dma1_stream3_isr()
     	CS_OFF_SET();
     }
     
-   // usart_print_text("Transfer complete");
-    
 }
+
+
+
+/*ASstm32 - Setup the GPIO pins used for interfacing with the TFT LCD screen */
 
 static void tftlcdsetup(void)
 {
@@ -180,6 +185,9 @@ static void tftlcdsetup(void)
 }
 
 
+
+/*ASstm32 - Setup the GPIO pins used for interfacing with the microSD card reader */
+
 static void sd_card_setup(void)
 {
 
@@ -191,8 +199,6 @@ static void sd_card_setup(void)
 
 	rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
 	rcc_peripheral_enable_clock(&RCC_APB1ENR, RCC_APB1ENR_SPI2EN);
-
-	//rcc_periph_clock_enable(RCC_GPIOB | RCC_GPIOC);
 
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLDOWN,
 			GPIO13 | GPIO14 | GPIO15);
@@ -213,7 +219,6 @@ static void sd_card_setup(void)
 	spi_set_full_duplex_mode(SPI2);
 	spi_enable_software_slave_management(SPI2);
 	spi_set_nss_high(SPI2);
-	//spi_enable_rx_dma(SPI2);
 
 	spi_init_master(SPI2, SPI_CR1_BAUDRATE_FPCLK_DIV_2, SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
 			SPI_CR1_CPHA_CLK_TRANSITION_1, SPI_CR1_DFF_8BIT, SPI_CR1_MSBFIRST);
@@ -225,9 +230,14 @@ static void sd_card_setup(void)
 
 }
 
+
+
+/*ASstm32 - Setup the STM32 USART - used for printing text on a serial port terminal and debugging*/
+
+
 static void usart_setup(void)
 {
-	/* Setup USART2 parameters. */
+
 	usart_set_baudrate(USART2, 115200);
 	usart_set_databits(USART2, 8);
 	usart_set_stopbits(USART2, USART_STOPBITS_1);
@@ -235,12 +245,12 @@ static void usart_setup(void)
 	usart_set_parity(USART2, USART_PARITY_NONE);
 	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
 
-	/* Finally enable the USART. */
+
 	usart_enable(USART2);
 }
 
 
-
+/*ASstm32 - For x milliseconds delay */
 
 void msdelay(int x)
 {
@@ -253,23 +263,8 @@ void msdelay(int x)
 }
 
 
-void usart_print_num(unsigned int x)
-{
-	
-	int dig;
-	int len = floor(log10(x));
-	
-	while(len>=0)
-	{
-		dig=x/((int)pow(10,len));
-		usart_send_blocking(USART2, dig + '0');
-		x=x- dig*(int)pow(10,len);
-		len--;
 
-	}
-	usart_send_blocking(USART2, '\t');
-}
-
+/*ASstm32 - Print numbers via USART */
 
 void usart_print_num2(unsigned int num)
 {
@@ -297,21 +292,8 @@ void usart_print_num2(unsigned int num)
 }
 
 
-void usart_print_bin(int arr[])
-{
-	
-	int c=7;
-	int val;
-	while(c>=0)
-	{
-		val=arr[c];
-		usart_send_blocking(USART2, val + '0');
-		c--;
-	}
 
-	usart_send_blocking(USART2, '\t');
-	
-}
+/*ASstm32 - Print text via USART */
 
 void usart_print_text(char *arr)
 {
@@ -330,6 +312,10 @@ void usart_print_text(char *arr)
 	
 }
 
+
+/*ASstm32 - Convert a hex number into an array*/
+
+
 void hex_to_arr(unsigned int x)
 {
 	int c=0;
@@ -345,18 +331,14 @@ void hex_to_arr(unsigned int x)
 		
 
 
+/*ASstm32 - For sending command codes to the TFT-LCD to set it up*/
+
 void Write_Command(unsigned int c)
 {
 	cs_on;
     rs_off;
     rd_off;
     wr_off;
-
-    #ifdef DEBUG
-    usart_send_blocking(USART2, 'c');
-	usart_send_blocking(USART2, ' ');
-	usart_print_num(c);
-	#endif
 
 	hex_to_arr(c);
 	
@@ -365,6 +347,9 @@ void Write_Command(unsigned int c)
 	cs_off;
 	
 }
+
+
+/*ASstm32 - For sending data to the TFT-LCD - 16 bits*/
 
 void Write_Data_Word(unsigned int c)
 {
@@ -373,24 +358,11 @@ void Write_Data_Word(unsigned int c)
     rd_off;
     wr_off;
 
-    #ifdef DEBUG
-    usart_send_blocking(USART2, 'd');
-	usart_send_blocking(USART2, '1');
-	usart_send_blocking(USART2, ' ');
-	usart_print_num(c>>8);
-	#endif
 
 	hex_to_arr(c>>8);
 	wr_on;
 	wr_off;	
 
-
-	#ifdef DEBUG
-	usart_send_blocking(USART2, 'd');
-	usart_send_blocking(USART2, '2');
-	usart_send_blocking(USART2, ' ');
-	usart_print_num(c);	
-	#endif
 
 	hex_to_arr(c);
 	wr_on;
@@ -398,6 +370,11 @@ void Write_Data_Word(unsigned int c)
 	cs_off;
 	
 }
+
+
+
+/*ASstm32 - For sending data to the TFT-LCD - 8 bits*/
+
 
 void Write_Data_Byte(unsigned int c)
 {
@@ -406,12 +383,6 @@ void Write_Data_Byte(unsigned int c)
     rd_off;
     wr_off;
 
-	#ifdef DEBUG
-	usart_send_blocking(USART2, 'd');
-	usart_send_blocking(USART2, '2');
-	usart_send_blocking(USART2, ' ');
-	usart_print_num(c);	
-	#endif
 
 	hex_to_arr(c);
 	wr_on;
@@ -420,11 +391,8 @@ void Write_Data_Byte(unsigned int c)
 	
 }
 
-void Write_Command_Data(unsigned int cmd, unsigned int dat)
-{
-	Write_Command(cmd);
-	Write_Data_Word(dat);
-}
+
+/*ASstm32 - Initialize the TFT LCD Screen */
 
 void Lcd_Init()
 {
@@ -435,16 +403,18 @@ void Lcd_Init()
 	//rst_on;
 	//msdelay(15);
 
-	Write_Command(0x3A);
+	Write_Command(0x3A);			//Pixel format set command
 	Write_Data_Byte(0x55);
-	Write_Command(0x11);
-	Write_Command(0x29);
-	Write_Command(0x36);
+	Write_Command(0x11);			//Turn off sleep mode
+	Write_Command(0x29);			//Trun on display command
+	Write_Command(0x36);			//Command to configure how to read/write to frame memory
 	Write_Data_Byte(0x28);
 
 
 }
 
+
+/*ASstm32 - Setting up the display area of the TFT LCD */
 
 void SetXY(unsigned int x0,unsigned int x1,unsigned int y0,unsigned int y1)
 {
@@ -459,6 +429,8 @@ void SetXY(unsigned int x0,unsigned int x1,unsigned int y0,unsigned int y1)
 }
 
 
+
+/*ASstm32 - Fill TFT LCD Screen with blank data */
 
 void LCD_clear()
 {
@@ -475,17 +447,21 @@ void LCD_clear()
 	#endif
 }
 
-int Paint()
+
+
+/*ASstm32 - For rendering videos on the screen*/
+
+int RenderVideo()
 {
-	int i,j,k=1,m;
+	int i,j,k=1;
 	SetXY(0,239,0,179);
-	uint16_t x, y, z=0, frameno=0;
+	uint16_t x, y, z=0;
 	uint32_t pos=0;
 	unsigned int bytes_ret;
-	unsigned char memtest[640];
+	//unsigned char memtest[640];
 	FRESULT fileStatus;  
 
-	JRESULT res;      /* Result code of TJpgDec API */
+	//JRESULT res;      /* Result code of TJpgDec API */
     JDEC jdec;        /* Decompression object */
     void *work = (void*)malloc(3100);  /* Pointer to the work area */
     IODEV devid;      /* User defined device identifier */
@@ -502,32 +478,8 @@ int Paint()
 		return 0;
 	}
 
-    #if 0
-    res = jd_prepare(&jdec, in_func, work, 3100, &devid);
-    if (res == JDR_OK) 
-    {
-        usart_print_text("Decompressing JPEG file");
-        usart_print_num2(jdec.width);
-        usart_print_num2(jdec.height);
 
-        /* Initialize output device */ 
-       // devid.fbuf = (uint8_t*)malloc(2 * jdec.width * jdec.height); /* Create frame buffer for output image (assuming RGB888 cfg) */
-        devid.wfbuf = jdec.width;
-
-        res = jd_decomp(&jdec, out_func, 0);   /* Start to decompress with 1/1 scaling */
-        if (res == JDR_OK) 
-            usart_print_text("Decompression succeeded.\n");
-        else 
-            usart_print_text("Failed to decompress");
-    } 
-    else 
-    {
-    	usart_print_num2(res);
-        usart_print_text("Failed to prepare.");
-    }
-    #endif
-
-
+	//ASstm32 - For reading a single jpeg image
 
 	#if 0	//Read 1 byte at a time
 
@@ -540,15 +492,17 @@ int Paint()
 		    //usart_print_num2(x);
 		    y=(int)devid.fbuf[ (i*480) + (k+1) ];
 	        Write_Data_Word( (uint16_t)((y * 0x100) + x)    );
-
-		   	
 	    }
 	 }	
 	 #endif
 
 
-devid.wfbuf = jdec.width;
-#if 1
+
+	//ASstm32 - For reading mjpeg files from the uSD
+	
+	#if 1
+
+	devid.wfbuf = jdec.width;
 
 	while(!f_eof(&devid.fp))
 	{
@@ -590,22 +544,12 @@ devid.wfbuf = jdec.width;
 		 }	
 	}
 
-#endif
+	#endif
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+	//Loop for reading RGB565 files from the uSD card
 
 	#if 0	//Read 241 frames, 1 whole line (640 bytes=320 pixels at a time)
 	for(m=0;m<241;m++)
@@ -628,17 +572,16 @@ devid.wfbuf = jdec.width;
 
 
 
-	
+	return 0;
 }
+
+
+
+/*ASstm32 - Turn GPIO pins on or off based on the data in the array*/
 
 
 void send_data(int val[])
 {
-
-	#ifdef DEBUG
-	usart_send_blocking(USART2, 'b');
-	usart_print_bin(val);
-	#endif
 
 	if(val[0])
 	gpio_set(GPIOC, GPIO0);
@@ -701,7 +644,6 @@ int main(void)
 
 	usart_print_text("Begin");
 
-
 	tftlcdsetup();
 	sd_card_setup();
 	dma_init();
@@ -710,51 +652,20 @@ int main(void)
 	msdelay(100);
 
 
-
-#if 1
+	//Drive initialization
 
 	FATFS fstest;      
 	FIL file_h; 
 	FRESULT fileStatus;                        
     char fsid[2];
-
-
     fsid[0] = '0';
     fsid[1] = '\0';
     f_mount(&fstest, fsid, 0);
 
 
-	//f_mkdir("/sdp/anwesh");
-	f_mkdir("mars");		//max character length = 8?
-								//max limit one directory at a time; a new sub-directory of length 8 can only be created if the parent directory exists.
 
-	#if 0
+	RenderVideo();
 
-	fileStatus=f_open(&file_h, "test123.txt", FA_OPEN_EXISTING | FA_READ);	//testvid.rgb, testimg3.rgb, gowj.jpg, test123.txt, ffmerged.mjpg
-	if(fileStatus==FR_OK)
-	{
-		usart_print_text("file opened successfully");
-	}
-	else
-	{
-		usart_print_text("file open failed");
-	}
-	#endif
-
-	#if 0
-	uint16_t texttest;
-	unsigned int bytes_ret;
-	while(!f_eof(&file_h))
-	{
-		f_read(&file_h, &texttest, 2, &bytes_ret);
-		usart_print_num2(texttest);
-	}
-	#endif
-
-	Paint();
-
-
-#endif
 
 	while(1)
 	{
