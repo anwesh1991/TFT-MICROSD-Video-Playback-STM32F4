@@ -1,25 +1,30 @@
-Project to support MJPEG and uncompressed/RGB565 playback in STM32 using software decoding. The code reads the video file from a microSD card (using SPI-DMA) and displays the frames on a TFT screen (the screen uses the ILI9341 display driver).
+<h3>Introduction</h3>
 
-For interfacing the microSD card, the open-source FatFs driver from ChaN has been used: http://elm-chan.org/fsw/ff/00index_e.html
+This project was a test to see how well an STM32F4 microcontroller could play videos using software decoding. The driver included here supports MJPEG and uncompressed/RGB565 playback. The code reads the video file from a microSD card (using SPI-DMA) and displays the frames on a TFT LCD screen.
 
-For the application layer for invoking the FatFs APIs, I ported the example code provided by Mbed to libopencm3. The original Mbed code can be found here: https://os.mbed.com/cookbook/SD-Card-File-System
-
-SPI has limited bandwidth of about 0.5 - 1 MBps and the size of the uncompressed video file was about 40 MB and hence the framerate is really slow.
+<h3>Pictures</h3>
 
 ![output](https://user-images.githubusercontent.com/7463848/88504308-a535bc00-cfd4-11ea-8d88-3fa69427adc9.gif)
 
-After integrating a JPEG decoder to read compressed/MJPEG video files instead, the framerate improved, but is still far from perfect. Since STM32F446RE's SRAM is only 128 KB, it wasn't enough to process a 320x240 MJPEG video, which would have needed 150 KB of SRAM instead. So the video was resized to 240x180.
-
 ![output](https://user-images.githubusercontent.com/7463848/89697870-7e557f00-d91e-11ea-9069-0d3e8b4c03c3.gif)
 
+<h3>Software Requirements</h3>
 
-Tested only with the Nucleo F446RE microcontroller, but should work with other STM32F4 Nucleo boards too. For F1/F2/F3 boards, modifications might be needed. 
-The libopencm3 folder in this repository is a heavily trimmed version of the original containing the required files needed to compile code only for the STM32F4 platform. 
+1. GCC-ARM toolchain (Preferably installed in /opt/ directory)
 
-Run the zbuildsd.sh script in the src folder to build the project and ycopysd.sh script to flash it to the microcontroller.
+2. Libopencm3 Library - Libopencm3 is an low-level, open-source library for STM32 development. The libopencm3 folder in this repository is a heavily trimmed version of the original containing the required files needed to compile code only for the STM32F4 platform. But the latest libopencm3 can be obtained from https://github.com/libopencm3/libopencm3
 
-Description, images, pin-mappings, scripts, To-Do list etc to be updated.
+3. ST-Linkv2 for flashing binary files to the microcontroller (https://freeelectron.ro/installing-st-link-v2-to-flash-stm32-targets-on-linux/)
 
+<h3>Hardware Requirements</h3>
+
+1. A TFT-LCD screen using an ILI9341 driver. This project uses the LCD Screen made bby ITEAD Studio: https://www.itead.cc/wiki/ITDB02-2.8_V1.0
+
+2. A microSD card reader. This project uses the one by Sparkfun: https://www.sparkfun.com/products/544
+
+3. An STM32F4 microcontroller. This project uses the NUCLEO-F446RE board.
+
+<h3>Pin-Mapping</h3>
 
 <table>
 <thead>
@@ -135,3 +140,42 @@ Description, images, pin-mappings, scripts, To-Do list etc to be updated.
   </tr>
 </tbody>
 </table>
+
+
+
+<h3>Pin-Important Files list</h3>
+
+1. src/videoplay.c - Written almost entirely by me; Contains the intialisation functions for the GPIO pins, the TFT LCD screen, the microSD card reader. Also contains the functions to render images and videos on the screen. 
+
+2. chanfiles/diskio.c - Contains the application layer for invoking the FatFs APIs, for reading and writing data from the microSD card. I ported the example code provided by Mbed to libopencm3 ( https://os.mbed.com/cookbook/SD-Card-File-System)
+
+3. chanfiles - The other files in this folder contain the open-source FatFs driver from ChaN (http://elm-chan.org/fsw/ff/00index_e.html)
+
+4. decode/tjpgd.c - The JPEG decoder, taken from Tiny JPEG Decompressor by ChaN (http://elm-chan.org/fsw/tjpgd/00index.html) Was slightly modified by me to make it compatible with this project.
+
+
+<h3>Pin-Building and Compilation</h3>
+
+Run make on the root folder to build the entire project, including the src files and the libopencm3 library
+
+If changes have done to the files in the src folder, run the zbuildsd.sh script to build only the src files
+
+Run the ycopysd.h script to generate bin files and automatically copy them to the STM32F4 microcontroller
+
+<h3>Performance Analysis</h3>
+
+SPI has limited bandwidth of about 0.5 - 1 MBps and the size of the uncompressed video file was about 40 MB and hence the framerate is really slow. (First image above)
+
+After integrating a JPEG decoder to read compressed/MJPEG video files instead, the framerate improved, but is still far from perfect. Since STM32F446RE's SRAM is only 128 KB, it wasn't enough to process a 320x240 MJPEG video, which would have needed 150 KB of SRAM instead. So the video was resized to 240x180. (Second image above)
+
+<h3>Downloads</h3>
+
+The RGB file used for testing: https://drive.google.com/file/d/1naavXjKioFAy7kV9V69ojJpQR5Z7ykuu/view?usp=sharing
+
+The MJPEG file used for testing: https://drive.google.com/file/d/1dNoX6LIpb77QD0pMJv0v4orD502aLdtR/view?usp=sharing
+
+<h3>Acknowledgements</h3>
+
+This project uses the Tiny JPEG Decompressor and the FatFs - Generic FAT Filesystem Module libraries from ChaN.
+
+
