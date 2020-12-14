@@ -20,3 +20,80 @@ Run the zbuildsd.sh script in the src folder to build the project and ycopysd.sh
 
 Description, images, pin-mappings, scripts, To-Do list etc to be updated.
 
+
+
+
+<table>
+<thead>
+  <tr>
+    <th>TFT-LCD</th>
+    <th>STM32F4</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>LED</td>
+    <td>3v3</td>
+  </tr>
+  <tr>
+    <td>RST</td>
+    <td>B7</td>
+  </tr>
+  <tr>
+    <td>CS</td>
+    <td>B6</td>
+  </tr>
+  <tr>
+    <td>DB15</td>
+    <td>C7</td>
+  </tr>
+  <tr>
+    <td>DB14</td>
+    <td>C6</td>
+  </tr>
+  <tr>
+    <td>DB13</td>
+    <td>C5</td>
+  </tr>
+  <tr>
+    <td>DB12</td>
+    <td>C4</td>
+  </tr>
+  <tr>
+    <td>DB11</td>
+    <td>C3</td>
+  </tr>
+  <tr>
+    <td>DB10</td>
+    <td>C2</td>
+  </tr>
+  <tr>
+    <td>DB9</td>
+    <td>C1</td>
+  </tr>
+  <tr>
+    <td>DB8</td>
+    <td>C0</td>
+  </tr>
+  <tr>
+    <td>RD</td>
+    <td>B0</td>
+  </tr>
+  <tr>
+    <td>WR</td>
+    <td>B1</td>
+  </tr>
+  <tr>
+    <td>RS</td>
+    <td>B5</td>
+  </tr>
+  <tr>
+    <td>VCC</td>
+    <td>5V</td>
+  </tr>
+  <tr>
+    <td>GND</td>
+    <td>GND</td>
+  </tr>
+</tbody>
+</table>
