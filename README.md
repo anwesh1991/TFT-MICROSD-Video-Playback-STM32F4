@@ -24,6 +24,25 @@ This project was a test to see how well an STM32F4 microcontroller could play vi
 
 3. An STM32F4 microcontroller. This project uses the NUCLEO-F446RE board.
 
+<h3>Important Files list</h3>
+
+1. src/videoplay.c - Written almost entirely by me; Contains the intialisation functions for the GPIO pins, the TFT LCD screen, the microSD card reader. Also contains the functions to render images and videos on the screen. 
+
+2. chanfiles/diskio.c - Contains the application layer for invoking the FatFs APIs, for reading and writing data from the microSD card. I ported the example code provided by Mbed to libopencm3 ( https://os.mbed.com/cookbook/SD-Card-File-System)
+
+3. chanfiles - The other files in this folder contain the open-source FatFs driver from ChaN (http://elm-chan.org/fsw/ff/00index_e.html)
+
+4. decode/tjpgd.c - The JPEG decoder, taken from Tiny JPEG Decompressor by ChaN (http://elm-chan.org/fsw/tjpgd/00index.html) Was slightly modified by me to make it compatible with this project.
+
+
+<h3>Building and Compilation</h3>
+
+Run make on the root folder to build the entire project, including the src files and the libopencm3 library
+
+If changes have done to the files in the src folder, run the zbuildsd.sh script to build only the src files
+
+Run the ycopysd.h script to generate bin files and automatically copy them to the STM32F4 microcontroller
+
 <h3>Pin-Mapping</h3>
 
 <table>
@@ -142,25 +161,6 @@ This project was a test to see how well an STM32F4 microcontroller could play vi
 </table>
 
 
-
-<h3>Important Files list</h3>
-
-1. src/videoplay.c - Written almost entirely by me; Contains the intialisation functions for the GPIO pins, the TFT LCD screen, the microSD card reader. Also contains the functions to render images and videos on the screen. 
-
-2. chanfiles/diskio.c - Contains the application layer for invoking the FatFs APIs, for reading and writing data from the microSD card. I ported the example code provided by Mbed to libopencm3 ( https://os.mbed.com/cookbook/SD-Card-File-System)
-
-3. chanfiles - The other files in this folder contain the open-source FatFs driver from ChaN (http://elm-chan.org/fsw/ff/00index_e.html)
-
-4. decode/tjpgd.c - The JPEG decoder, taken from Tiny JPEG Decompressor by ChaN (http://elm-chan.org/fsw/tjpgd/00index.html) Was slightly modified by me to make it compatible with this project.
-
-
-<h3>Building and Compilation</h3>
-
-Run make on the root folder to build the entire project, including the src files and the libopencm3 library
-
-If changes have done to the files in the src folder, run the zbuildsd.sh script to build only the src files
-
-Run the ycopysd.h script to generate bin files and automatically copy them to the STM32F4 microcontroller
 
 <h3>Performance Analysis</h3>
 
