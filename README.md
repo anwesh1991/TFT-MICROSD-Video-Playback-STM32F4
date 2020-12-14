@@ -21,6 +21,44 @@ Run the zbuildsd.sh script in the src folder to build the project and ycopysd.sh
 Description, images, pin-mappings, scripts, To-Do list etc to be updated.
 
 
+<table>
+<thead>
+  <tr>
+    <th>MicroSD <br>Reader</th>
+    <th>STM32F4</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>GND</td>
+    <td>GND</td>
+  </tr>
+  <tr>
+    <td>CO</td>
+    <td>NIL</td>
+  </tr>
+  <tr>
+    <td>DO</td>
+    <td>B14</td>
+  </tr>
+  <tr>
+    <td>SCK</td>
+    <td>B13</td>
+  </tr>
+  <tr>
+    <td>DI</td>
+    <td>B15</td>
+  </tr>
+  <tr>
+    <td>CS</td>
+    <td>A10</td>
+  </tr>
+  <tr>
+    <td>VCC</td>
+    <td>3v3</td>
+  </tr>
+</tbody>
+</table>
 
 
 <table>
