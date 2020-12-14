@@ -143,7 +143,7 @@ This project was a test to see how well an STM32F4 microcontroller could play vi
 
 
 
-<h3>Pin-Important Files list</h3>
+<h3>Important Files list</h3>
 
 1. src/videoplay.c - Written almost entirely by me; Contains the intialisation functions for the GPIO pins, the TFT LCD screen, the microSD card reader. Also contains the functions to render images and videos on the screen. 
 
@@ -154,7 +154,7 @@ This project was a test to see how well an STM32F4 microcontroller could play vi
 4. decode/tjpgd.c - The JPEG decoder, taken from Tiny JPEG Decompressor by ChaN (http://elm-chan.org/fsw/tjpgd/00index.html) Was slightly modified by me to make it compatible with this project.
 
 
-<h3>Pin-Building and Compilation</h3>
+<h3>Building and Compilation</h3>
 
 Run make on the root folder to build the entire project, including the src files and the libopencm3 library
 
