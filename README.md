@@ -1,6 +1,6 @@
 <h3>Introduction</h3>
 
-This project was a test to see how well an STM32F4 microcontroller could play videos using software decoding. The driver included here supports MJPEG and uncompressed/RGB565 playback. The code reads the video file from a microSD card (using SPI-DMA) and displays the frames on a TFT LCD screen.
+This project was a test to see how well an STM32F4 microcontroller could play videos using software decoding. The driver I have written supports MJPEG and uncompressed/RGB565 playback. The code reads the video file from a microSD card (using SPI-DMA) and displays the frames on a TFT LCD screen.
 
 <h3>Pictures</h3>
 
