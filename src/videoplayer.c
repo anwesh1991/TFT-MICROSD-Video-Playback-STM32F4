@@ -307,6 +307,7 @@ void usart_print_text(char *arr)
 		usart_send_blocking(USART2, ch);
 		c++;
 	}
+	free(arr);
 
 	usart_send_blocking(USART2, '\t');
 	
